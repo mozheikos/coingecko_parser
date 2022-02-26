@@ -1,62 +1,45 @@
 from pycoingecko import CoinGeckoAPI
-from sqlalchemy.orm import relationship
-from sqlalchemy import ForeignKeyConstraint, Index, PrimaryKeyConstraint, UniqueConstraint, create_engine,\
-     MetaData, Table, Integer, String, Column, DateTime, ForeignKey, Numeric, JSON, Boolean
-from sqlalchemy.ext.declarative import declarative_base
+import json
+from sqlalchemy.orm import Session
+from sqlalchemy import create_engine
+from tables_creator import Coins, Exchanges, TradeItems, engine, create_tables, Base
 
-engine = create_engine("postgresql://parser:parser@localhost:5432/analyticsgroupdb")
-engine.connect()
-print(engine)
+cg = CoinGeckoAPI()
 
-metadata = MetaData()
-Base = declarative_base()
+Base.metadata.drop_all(engine)
+create_tables(Base, engine)
 
-class Coins(Base):
-    __tablename__ = 'coins'
-    id = Column(Integer, primary_key=True)
-    name = Column(String(100), nullable=False)
-    ticker = Column(String(10), nullable=False)
-    coingecko_id = Column(String(100), nullable=False)
-    coin_info = relationship('CoinsInfo')
-    tradeitems = relationship('TradeItems')
+session = Session(bind=engine)
 
-    __table_args__ = (
-        UniqueConstraint('name'),
-        UniqueConstraint('ticker'),
-        Index('ticker_idx', 'ticker'),
+
+def get_coin_first_run(cg_coin, coin_id):
+    # links = cg.get_coin_by_id(coin_id)['links']
+    coin = Coins(
+        name = cg_coin['name'],
+        ticker = cg_coin['symbol'],
+        coingecko_id = cg_coin['id'],
+        coin_rank = cg_coin['market_cap_rank'],
+        price = cg_coin['current_price'],
+        circulating_supply = cg_coin['circulating_supply'],
+        total_supply = cg_coin['total_supply'],
+        # links = json.dumps(links)
+        # homepage = links['homepage'],
+        # blockchain_site = links['blockchain_site'],
+        # official_forum_url = links['official_forum_url'],
+        # chat_url = links['chat_url'],
+        # announcement_url = links['announcement_url'],
+        # twitter_screen_name = links['twitter_screen_name'],
+        # facebook_username = links['facebook_username'],
+        # bitcointalk_thread_identifier = links['bitcointalk_thread_identifier'],
+        # telegram_channel_identifier = links['telegram_channel_identifier'],
+        # subreddit_url = links['subreddit_url'],
+        # repos_url = json.dumps(links['repos_url'])
     )
+    return coin
 
-class CoinsInfo(Base):
-    __tablename__ = 'coins_info'
-    id = Column(Integer, primary_key=True)
-    coin_id = Column(Integer, ForeignKey('coins.id'))
-    homepage = Column(String(255))
-    blockchain_site = Column(String(1000))
-    official_forum_url = Column(String(1000))
-    chat_url = Column(String(1000))
-    announcement_url = Column(String(1000))
-    twitter_screen_name = Column(String(30))
-    faccebook_username = Column(String(30))
-    bitcointalk_thread_identifier = Column(String(30))
-    telegram_channel_identifier = Column(String(30))
-    subreddit_url = Column(String(255))
-    repos_url = Column(JSON(1000))
-
-class Exchanges(Base):
-    __tablename__ = 'exchanges'
-    id = Column(Integer, primary_key=True)
-    coingecko_id = Column(String(30))
-    display_symbol = Column(String(30))
-    exchange_name = Column(String(255))
-    trust_score = Column(Boolean)
-
-class TradeItems(Base):
-    __tablename__ = 'coins_exchanges'
-    id = Column(Integer, primary_key=True)
-    coin_id = Column(Integer, ForeignKey('coins.id'))
-    target_coin_id = Column(Integer, ForeignKey('coins.id'))
-    exchange_id = Column(Integer, ForeignKey('exchanges.id'))
-    coin_symbol = Column(String(40), default=('coin_id.ticker' + '/' + 'target_coin_id.ticker'))
-
-
-Base.metadata.create_all(engine, checkfirst=True)
+coins = cg.get_coins_markets('usd')
+for item in coins:
+    coin_id = item['id']
+    coin = get_coin_first_run(item, coin_id)
+    session.add(coin)
+session.commit()
