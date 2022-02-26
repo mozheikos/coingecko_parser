@@ -38,6 +38,17 @@ def get_exchanges(exch):
     )
     return exchange
 
+# def get_trade_items(item):
+#     base_id = session.query(Coins).filter(Coins.coingecko_id == item['coin_id']).one().id
+#     target_id = session.query(Coins).filter(Coins.coingecko_id == item['target_coin_id']).one().id
+#     exchange_id = session.query(Exchanges).filter(Exchanges.coingecko_id == )
+
+#     oin_id = base_id,
+#     target_coin_id = target_id,
+#     exchange_id = Column(Integer, ForeignKey('exchanges.id'))
+#     coin_symbol = Column(String(40), default=('coin_id.ticker' + '/' + 'target_coin_id.ticker'))
+
+
 coins = cg.get_coins_markets('usd')
 fill_table(coins, get_coin_first_run)
 
