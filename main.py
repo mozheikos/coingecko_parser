@@ -11,9 +11,13 @@ create_tables(Base, engine)
 
 session = Session(bind=engine)
 
+def fill_table(iter_item, function):
+    for item in iter_item:
+        row = function(item)
+        session.add(row)
+    session.commit()
 
-def get_coin_first_run(cg_coin, coin_id):
-    # links = cg.get_coin_by_id(coin_id)['links']
+def get_coin_first_run(cg_coin):
     coin = Coins(
         name = cg_coin['name'],
         ticker = cg_coin['symbol'],
@@ -22,24 +26,20 @@ def get_coin_first_run(cg_coin, coin_id):
         price = cg_coin['current_price'],
         circulating_supply = cg_coin['circulating_supply'],
         total_supply = cg_coin['total_supply'],
-        # links = json.dumps(links)
-        # homepage = links['homepage'],
-        # blockchain_site = links['blockchain_site'],
-        # official_forum_url = links['official_forum_url'],
-        # chat_url = links['chat_url'],
-        # announcement_url = links['announcement_url'],
-        # twitter_screen_name = links['twitter_screen_name'],
-        # facebook_username = links['facebook_username'],
-        # bitcointalk_thread_identifier = links['bitcointalk_thread_identifier'],
-        # telegram_channel_identifier = links['telegram_channel_identifier'],
-        # subreddit_url = links['subreddit_url'],
-        # repos_url = json.dumps(links['repos_url'])
     )
     return coin
 
+def get_exchanges(exch):
+    exchange = Exchanges(
+        coingecko_id = exch['id'],
+        display_symbol = exch['id'],
+        exchange_name = exch['name'],
+        trust_score = exch['trust_score'],
+    )
+    return exchange
+
 coins = cg.get_coins_markets('usd')
-for item in coins:
-    coin_id = item['id']
-    coin = get_coin_first_run(item, coin_id)
-    session.add(coin)
-session.commit()
+fill_table(coins, get_coin_first_run)
+
+exchanges = cg.get_exchanges_list()
+fill_table(exchanges, get_exchanges)

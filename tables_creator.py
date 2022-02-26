@@ -21,17 +21,6 @@ class Coins(Base):
     price = Column(Numeric)
     circulating_supply = Column(BigInteger)
     total_supply = Column(BigInteger)
-    # homepage = Column(String(255))
-    # blockchain_site = Column(String(1000))
-    # official_forum_url = Column(String(1000))
-    # chat_url = Column(String(1000))
-    # announcement_url = Column(String(1000))
-    # twitter_screen_name = Column(String(30))
-    # facebook_username = Column(String(30))
-    # bitcointalk_thread_identifier = Column(String(30))
-    # telegram_channel_identifier = Column(String(30))
-    # subreddit_url = Column(String(255))
-    # links = Column(JSON(1000))
 
     __table_args__ = (
         UniqueConstraint('name'),
@@ -46,7 +35,7 @@ class Exchanges(Base):
     coingecko_id = Column(String(30))
     display_symbol = Column(String(30))
     exchange_name = Column(String(255))
-    trust_score = Column(Boolean)
+    trust_score = Column(Integer)
 
 class TradeItems(Base):
     __tablename__ = 'coins_exchanges'
