@@ -1,6 +1,5 @@
 import json
 from pycoingecko import CoinGeckoAPI
-from math import ceil
 from time import sleep
 from sqlalchemy.orm import Session
 from tables_creator import Coins, Exchanges, TradeItems, engine, create_tables, Base
@@ -82,7 +81,7 @@ for item in exchanges_ids:
     tickers_list = cg.get_exchanges_tickers_by_id(item, coin_ids=coins_ids)['tickers']
     tickers_ids += fill_table(tickers_list, get_trade_items)
 
-sleep(120)
+sleep(3600)
 while True:
     new_coins = cg.get_coins_markets('usd', ids=coins_ids, order='market_cap_rank_asc')
     for item in new_coins:
@@ -98,4 +97,4 @@ while True:
         item_to_update.total_supply = new_total_supply
         session.add(item_to_update)
         session.commit()
-    sleep(120)
+    sleep(3600)
