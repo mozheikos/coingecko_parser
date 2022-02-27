@@ -73,7 +73,7 @@ def get_trade_items(item):
 
 coins = cg.get_coins_markets('usd', per_page=40)
 coins_ids = fill_table(coins, get_coin_first_run)
-
+sleep(65)
 exchanges = cg.get_exchanges_list()[:40]
 exchanges_ids = fill_table(exchanges, get_exchange)
 
@@ -81,3 +81,21 @@ tickers_ids = []
 for item in exchanges_ids:
     tickers_list = cg.get_exchanges_tickers_by_id(item, coin_ids=coins_ids)['tickers']
     tickers_ids += fill_table(tickers_list, get_trade_items)
+
+sleep(120)
+while True:
+    new_coins = cg.get_coins_markets('usd', ids=coins_ids, order='market_cap_rank_asc')
+    for item in new_coins:
+        item_to_update = session.query(Coins).filter(Coins.coingecko_id == item['id']).first()
+        new_rank = item['market_cap_rank']
+        new_price = item['current_price']
+        new_circulating_supply = item['circulating_supply']
+        new_total_supply = item['total_supply']
+        
+        item_to_update.coin_rank = new_rank
+        item_to_update.price = new_price
+        item_to_update.circulating_supply = new_circulating_supply
+        item_to_update.total_supply = new_total_supply
+        session.add(item_to_update)
+        session.commit()
+    sleep(120)
